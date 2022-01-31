@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.0;
 
 import "../sharedDependencies/extensions/SafeMath.sol";
@@ -9,74 +10,75 @@ import "../sharedDependencies/extensions/EnumerableMapUintArray.sol";
 import "../sharedDependencies/dependencies/IERC721Enumerable.sol";
 import "../Accesorios/AccessoryCore.sol";
 
+
+
 contract Presale is Ownable{
   using SafeMath for uint256;
   using EnumerableSet for EnumerableSet.UintSet;
   using EnumerableMapUintArray for EnumerableMapUintArray.UintToUintArrayMap;
 
-  uint256  public START_TIMESTAMP = 0; //1642802400
-  uint256  public FULL_UNLOCK_TIMESTAMP = 0; //
+  uint256  public START_TIMESTAMP = 0;
+  uint256  public FULL_UNLOCK_TIMESTAMP = 0;
   uint256  public PRESALE_OPENING_TIMESTAMP = 3000000003;
   uint256  public END_TIMESTAMP = 3000000004;
 
-  
-  address priceBalancer;
+  //@notice address allowed to balance NFTs prices 
+  address public priceBalancer;
 
-  address animalAddress;
-  address accessoryAddress;
-  address habitatAddress;
+  address public  animalAddress;
+  address public  accessoryAddress;
+  address public  habitatAddress;
 
   mapping(address => bool) public whitelist;
 
+  //@notice Times an address has spinned each roulette
   mapping(address => mapping (uint256 => uint256)) public quantityBought;
   //0 = baseAnimal(max5), 1 = accessory(max12), 2 = habitat(max1), 
   //3 = fullskin(max1) 
 
-  uint16 public animalsCount; //Elegible por nada
-  //0 = leon, 1 = pinguino, 2 = aguila,
-  //3 = pantera, 4 = camaleon, 5 = oso
-  //6 = mono
+  //@notice Total number of times the first roulette (spinAnimalRoulette) has been spinned
+  uint16 public animalsCount;
+  //0 = lion, 1 = penguin, 2 = eagle,
+  //3 = panther, 4 = chamaleon, 5 = bear
+  //6 = monkey
 
-  mapping(uint256 => uint16) public accessoriesMap; //especie => cantidadSobrante || 7000/7 = 1000
-  //Elegible por especie
+  //@notice Number of times the second roulette (spinAccessoryRoulette) has been spinned (per selected specie)
+  mapping(uint256 => uint16) public accessoriesMap; //specie => timesSpinned
 
-  mapping(uint256 => uint16) public habitatsMap; //categoria => cantidadSobrante || 789 = 474, 217, 98 
-    //Elegible por categoria
-    //0 = Bestia: //331
-    //      León
-    //      Pantera
-    //      Oso
-    //1 = Reptil: //114
-    //      Camaleón
-    //2 = Aéreo:  //114
-    //      Aguila
-    //3 = Agua:  //114
-    //      Pinguino
-    //4 = Herbívoro:  //114
-    //      Mono
+  //@notice Number of times the third roulette (spinHabitatRoulette) has been spinned (per selected category)
+  mapping(uint256 => uint16) public habitatsMap; //category => timesSpinned
+    //0 = Beast: //331 max
+    //      Lion
+    //      Panther
+    //      Bear
+    //1 = Reptil: //114 max
+    //      Chamaleon
+    //2 = Aerial:  //114 max
+    //      Eagle
+    //3 = Acuatic:  //114 max
+    //      Penguin
+    //4 = Hervivorous:  //114 max
+    //      Monkey
 
     
+  //@notice Number of times the fourth roulette (spinFullskinRoulette) has been spinned (per selected rarity)
+  mapping(uint256 => uint16) public fullskinMap; //rarity => timesSpinned
+  //0 = rare; 1 = epic, 2 = legendary
 
-  mapping(uint256 => uint16) public fullskinMap; //rareza => cantidadSobrante || 700 = 400, 200, 100
-  //Elegible por rareza
-    
+  //@notice Cost in jagger of spinning each roullete (3, 4 and 5 corresponds to the fourth roulette)
   uint256[6] public pricesJager; 
   //0 = baseAnimal, 1 = accessory, 2 = habitat, 
   //3 = fullRare, 4 = fullEpic, 5 = fullLegendary
-  
+
+  //@notice Events with useful information for the presale page on the website
   event RoulleteSpinned(address indexed nftWinner, uint256 indexed eventCode, uint256 natureCode);
   event RoulleteSpinnedFullskin(address indexed nftWinner, uint256 indexed eventCode, uint256 natureCode);
-  //000-005 Animal(Especie)
-  //1000-1999 Accesorios(Rareza)
-  //2000-2999 Habitat(Rareza)
-  //3000-3999 Fullskin(Especie)
 
   constructor(
     uint256[6] memory _pricesJager
-    ) 
+  ) 
   public {
     pricesJager = _pricesJager;
-    // whitelist[msg.sender] = true;
     priceBalancer = msg.sender;
   }
 
@@ -91,36 +93,44 @@ contract Presale is Ownable{
   modifier ableToBuyPhase2(){ 
     uint256 time = block.timestamp;
     require((whitelist[msg.sender] || time >= PRESALE_OPENING_TIMESTAMP), "Not Whitelisted nor Open"); //TESTEAR booleano implicito
-    require(FULL_UNLOCK_TIMESTAMP <= time && time <= END_TIMESTAMP, "Presale Ended or hasn't started yet"); //TESTEAR booleano implicito
+    require(FULL_UNLOCK_TIMESTAMP <= time && time <= END_TIMESTAMP, "Presale not in second phase yet"); //TESTEAR booleano implicito
     _;
   }
 
+  //@dev Mints an animal and transfers it to buyer
   function spinAnimalRoulette() external payable ableToBuy{
-    require(animalsCount<4000, "Animal count muy gande");
+    require(animalsCount<4000);
     animalsCount++;
-    require(quantityBought[msg.sender][0]<5, "Para un toque man");
+
+    require(quantityBought[msg.sender][0]<5);
     quantityBought[msg.sender][0]++;
-    require(msg.value >= pricesJager[0], "POBRE");
+
+    uint256 value = msg.value;
+    require(value >= pricesJager[0]);
+    value -= pricesJager[0];
+
     //Calcular especie
     uint256 rouletteNumber = _getRandomUint(animalsCount);
     uint256 specie = rouletteNumber % 7;
     uint256 natureCode = rouletteNumber - rouletteNumber%1000 + 300 + specie;
     IZooForceNFTCore(animalAddress).createZooForceNFT( msg.sender, natureCode);
+    msg.sender.transfer(value);
     emit RoulleteSpinned(msg.sender, specie, natureCode);
   }
 
 
-
+  //@dev Mints an accessory with a defined specie in its natureCode and transfers it to buyer
   function spinAccessoryRoulette(uint8 _specie) external payable ableToBuyPhase2 {
-    require(_specie<7, "Specie non existen!");
-    require(accessoriesMap[_specie]<1000, "Not enough accessories of this specie left!");
+    require(_specie<7);
+    require(accessoriesMap[_specie]<1000);
     accessoriesMap[_specie]++;
 
     require(quantityBought[msg.sender][1]<12);
     quantityBought[msg.sender][1]++;
 
-    require(msg.value >= pricesJager[1], "Poor!");
-
+    uint256 value = msg.value;
+    require(value >= pricesJager[1]);
+    value -= pricesJager[1];
     //Calcular categoria(_specie), rareza y slot {(12(7),3(3),4(4)}
     uint256 rouletteNumber = _getRandomUint(accessoriesMap[_specie]);
     uint256 seccionDMil = rouletteNumber%10000;
@@ -135,24 +145,27 @@ contract Presale is Ownable{
     uint256 slot = (seccionDMil%4) * 1000;
     uint256 natureCode = rouletteNumber - seccionDMil + slot + rareza + _specie ;
     IZooForceNFTCore(accessoryAddress).createZooForceNFT(msg.sender, natureCode);
-
+    msg.sender.transfer(value);
     emit RoulleteSpinned(msg.sender, 10000 + slot + rareza * 10 + _specie, natureCode);
   }
 
+  //@dev Mints an habitat with a defined category in its natureCode and transfers it to buyer
   function spinHabitatRoulette(uint8 _category) external payable ableToBuyPhase2{
     require(_category<5);
     if(_category == 0){
-      require(habitatsMap[0]<331, "Habitats of beast no left!");
+      require(habitatsMap[0]<331);
       habitatsMap[0]++;
     } else{
-      require(habitatsMap[_category]<114, "Habitats of specie no left!");
+      require(habitatsMap[_category]<114);
       habitatsMap[_category]++;
     }
 
     require(quantityBought[msg.sender][2]<1);
     quantityBought[msg.sender][2]++;
 
-    require(msg.value >= pricesJager[2], "Poor!");
+    uint256 value = msg.value;
+    require(value >= pricesJager[2]);
+    value -= pricesJager[2];
 
     //Calcular categoria(_category) y rareza
     uint256 rouletteNumber = _getRandomUint(habitatsMap[_category]);
@@ -168,9 +181,11 @@ contract Presale is Ownable{
     }
     uint256 natureCode = rouletteNumber - seccionMil + rareza + _category ;
     IZooForceNFTCore(habitatAddress).createZooForceNFT(msg.sender, natureCode);
+    msg.sender.transfer(value);
     emit RoulleteSpinned(msg.sender, 20000 + rareza + _category, natureCode);
   }
   
+  //@dev Mints an animal and four accessories with a defined rarity in its natureCode and transfers it to buyer
   function spinFullSkinRoulette(uint8 _rarity) external payable ableToBuyPhase2{
     require(_rarity<3, "Rarity non existen");
     if(_rarity == 0){
@@ -186,7 +201,9 @@ contract Presale is Ownable{
     require(quantityBought[msg.sender][3]<1);
     quantityBought[msg.sender][3]++;
 
-    require(msg.value >= pricesJager[3+_rarity], "Poor!");
+    uint256 value = msg.value;
+    require(value >= pricesJager[3+_rarity]);
+    value -= pricesJager[3+_rarity];
 
     //Calcular categoria y rareza(_rarity)
     uint256 rouletteNumber = _getRandomUint(fullskinMap[_rarity]);
@@ -206,11 +223,12 @@ contract Presale is Ownable{
     AccessoryCore(accessoryAddress).createZooForceNFTBatch(msg.sender, accCode);
     
     IZooForceNFTCore(animalAddress).createZooForceNFT(msg.sender, natureCode);
+    msg.sender.transfer(value);
     emit RoulleteSpinnedFullskin(msg.sender, 40000 + _rarity * 100 + species, natureCode);
   }
 
-  
-  function _getRandomUint(uint256 _nonce) internal returns(uint256){ // Nonce is always nft remaining quantitiy
+  //@dev Creates a totally random uint256
+  function _getRandomUint(uint256 _nonce) internal view returns(uint256){ // Nonce is always nft remaining quantitiy
     uint256 blockHashUint = uint256(blockhash(block.number));
     uint256 randomNumber =
         uint256(keccak256(abi.encodePacked(
@@ -220,36 +238,42 @@ contract Presale is Ownable{
     return randomNumber;
   }
 
+  //@dev Updates prices for NFTs in case BNB fluctuates too much while the presale is held
   function updatePrices(uint256[6] calldata _adjustedPrices) external{
     require(msg.sender == priceBalancer, "Not the Price Balancer");
     pricesJager = _adjustedPrices;
   }
 
+  //@dev Whitdraws BNB from contract
   function withdrawBNB() external onlyOwner{
     payable(owner()).transfer(address(this).balance);
   }
 
+  //@dev Ends presale early
   function endPresale() external onlyOwner{
     END_TIMESTAMP = 0;
   }
 
+  //@dev Open presale early
   function openPresale() external onlyOwner{
     PRESALE_OPENING_TIMESTAMP = 0;
   }
 
+  //@dev Set NFTs cores addresses
   function setNFTAddresses(address _animalAddress, address _accessoryAddress, address _habitatAddress) external onlyOwner{
     animalAddress = _animalAddress;
     accessoryAddress = _accessoryAddress;
     habitatAddress = _habitatAddress;
   }
 
+  //@dev Add addresses to whitelist
   function addWhitelistedAddresses(address[] calldata _whitelistedAddresses) external onlyOwner{
     for(uint256 i =0; i<_whitelistedAddresses.length;i++){
       whitelist[_whitelistedAddresses[i]] = true;
     }
   }
 
-  //@dev Actually returns the number of times a roulette has been spinned
+  //@dev Returns the number of times a roulette has been spinned
   function getBougthNFTs(address _buyer) view external returns(uint8[4] memory){
     uint8[4] memory timesSpinned;
     for(uint i = 0; i<4; i++){
@@ -258,7 +282,7 @@ contract Presale is Ownable{
     return timesSpinned;
   }
 
-
+  //@dev Returns total of NFTs bougth and the roulettes prices
   function getAnimalsAndPrices() external view returns(uint16[16] memory, uint256[6] memory){
     uint16[16] memory nftsQuantities; 
 
@@ -308,8 +332,4 @@ contract Presale is Ownable{
   function setPriceBalancer(address _priceBalancer) external onlyOwner{
     priceBalancer = _priceBalancer;
   }
-
-  // receive() external payable{
-  // }
-
 }
