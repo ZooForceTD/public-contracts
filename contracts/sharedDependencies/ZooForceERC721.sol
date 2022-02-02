@@ -11,11 +11,6 @@ import "./dependencies/ERC721Metadata.sol";
 import "./dependencies/IERC721Receiver.sol";
 import "./dependencies/IERC721Enumerable.sol";
 
-/**
- * @title ERC721 Non-Fungible Token Standard basic implementation
- * @dev see https://eips.ethereum.org/EIPS/eip-721
- */
-
 abstract contract ZooForceERC721 is Context, ERC165, IERC721, IERC721Enumerable, ERC721Metadata {
     using SafeMath for uint256;
     using Address for address;
@@ -280,41 +275,6 @@ abstract contract ZooForceERC721 is Context, ERC165, IERC721, IERC721Enumerable,
         _mintZooNFT(to, ZooNFTID, natureCode);
         require(_checkOnERC721Received(address(0), to, ZooNFTID, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
-
-    // /**
-    //  * @dev Mints `ZooNFTID` and transfers it to `to`.
-    //  *
-    //  * WARNING: Usage of this method is discouraged, use {_safeMint} whenever possible
-    //  *
-    //  * Requirements:
-    //  *
-    //  * - `ZooNFTID` must not exist.
-    //  * - `to` cannot be the zero address.
-    //  *
-    //  * Emits a {Transfer} event.
-    //  */
-    // function _mintZooNFT(address to, uint256 ZooNFTID, uint256 natureCode) internal virtual {
-    //     require(to != address(0), "ERC721: mint to the zero address");
-    //     require(!_exists(ZooNFTID), "ERC721: token already minted");
-        
-    //     ZooNFT memory _ZooNFT = ZooNFT({
-    //         natureCode: natureCode,
-    //         birthMoment: uint64(block.timestamp)
-    //     });
-        
-    //     ZooNFTs.push(_ZooNFT);
-        
-    //     emit Birth(to, ZooNFTID, _ZooNFT.natureCode);
-
-    //     _beforeTokenTransfer(address(0), to, ZooNFTID);
-
-    //     _holderTokens[to].add(ZooNFTID);
-
-    //     _tokenOwners.set(ZooNFTID, to);
-        
-
-    //     emit Transfer(address(0), to, ZooNFTID);
-    // }
 
     function _mintZooNFT(address to, uint256 ZooNFTID, uint256 natureCode) internal virtual;
 
