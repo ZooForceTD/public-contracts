@@ -45,29 +45,17 @@ module.exports = {
     }
   },
 
-
-  // rinkeby:{
-  //   host: "localhost",
-  //   provider: function() {
-  //   return new HDWalletProvider( mnemonic, "https://rinkeby.infura.io/v3/" + tokenKey);
-  //   },
-  //   network_id: 4
-  //   , gas : 6700000
-  //   , gasPrice : 10000000000
-  //   }
-
-  // mocha: {
-  //   reporter: 'eth-gas-reporter',
-  //   reporterOptions: {
-  //     coinmarketcap: 'f06d27d0-ee31-4039-9e15-ee0dc215a3c4',
-  //     token: 'BNB',
-  //     excludeContracts: ['Migrations'],
-  //     currency: 'USD',
-  //     gasPriceApi: 'https://api.bscscan.com/api?module=proxy&action=eth_gasPrice',
-  //     //src:'',
-  //   }
-  //   // reporter options: https://www.npmjs.com/package//eth-gas-reporter
-  // },
+  mocha: {
+    reporter: 'eth-gas-reporter',
+    reporterOptions: {
+      coinmarketcap: 'f06d27d0-ee31-4039-9e15-ee0dc215a3c4',
+      token: 'BNB',
+      excludeContracts: ['Migrations'],
+      currency: 'USD',
+      gasPriceApi: 'https://api.bscscan.com/api?module=proxy&action=eth_gasPrice',
+    }
+    // reporter options: https://www.npmjs.com/package//eth-gas-reporter
+  },
 
   compilers: {
     solc: {
