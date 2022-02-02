@@ -15,7 +15,7 @@ module.exports = {
     bsc_testnet: {
       provider: () => new HDWalletProvider(
         process.env.MNEMONIC_TESTNET,
-        process.env.MORALIS_BSC_TESTNET_PROVIDER
+        process.env.NODE_BSC_TESTNET_PROVIDER
       ),
       network_id: 97,
       confirmations: 1,
@@ -25,7 +25,7 @@ module.exports = {
     rinkeby: {
       provider: () => new HDWalletProvider(
         process.env.MNEMONIC_TESTNET,
-        process.env.MORALIS_RINKEBY_PROVIDER
+        process.env.NODE_RINKEBY_PROVIDER
       ),
       gas: 6700000,
       gasPrice : 10000000000,
@@ -36,7 +36,7 @@ module.exports = {
     bsc: {
       provider: () => new HDWalletProvider(
         process.env.MNEMONIC_MAINNET,
-        process.env.MORALIS_BSC_MAINNET_PROVIDER
+        process.env.NODE_BSC_MAINNET_PROVIDER
       ),
       network_id: 56,
       confirmations: 10,
