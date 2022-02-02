@@ -5,17 +5,14 @@ pragma solidity ^0.6.0;
 import "../sharedDependencies/extensions/SafeMath.sol";
 import "../sharedDependencies/extensions/Ownable.sol";
 import "../sharedDependencies/IZooForceNFTCore.sol";
-import "../sharedDependencies/extensions/EnumerableSet.sol";
-import "../sharedDependencies/extensions/EnumerableMapUintArray.sol";
 import "../sharedDependencies/dependencies/IERC721Enumerable.sol";
-import "../Accesorios/AccessoryCore.sol";
+import "../Accessories/AccessoryCore.sol";
 
 
 
 contract Presale is Ownable{
   using SafeMath for uint256;
-  using EnumerableSet for EnumerableSet.UintSet;
-  using EnumerableMapUintArray for EnumerableMapUintArray.UintToUintArrayMap;
+
 
   uint256  public START_TIMESTAMP = 0;
   uint256  public FULL_UNLOCK_TIMESTAMP = 0;
@@ -216,7 +213,6 @@ contract Presale is Ownable{
     uint256[4] memory accCode;
     uint256 quality = uint256(keccak256(abi.encodePacked(block.timestamp, natureCode)));
     quality = quality-quality%10000;
-    // quality = quality - quality%10000+ i*1000 + _rarity*100+species;
     for(uint i = 0; i<4;i++){
       accCode[i] = quality-quality%10000 + i*1000 + repetitiveData;
     }
@@ -227,7 +223,7 @@ contract Presale is Ownable{
     emit RoulleteSpinnedFullskin(msg.sender, 40000 + _rarity * 100 + species, natureCode);
   }
 
-  //@dev Creates a totally random uint256
+  //@dev Creates a random uint256
   function _getRandomUint(uint256 _nonce) internal view returns(uint256){ // Nonce is always nft remaining quantitiy
     uint256 blockHashUint = uint256(blockhash(block.number));
     uint256 randomNumber =
