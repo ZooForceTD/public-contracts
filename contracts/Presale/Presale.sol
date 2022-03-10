@@ -282,28 +282,19 @@ contract Presale is Ownable{
   function getAnimalsAndPrices() external view returns(uint16[16] memory, uint256[6] memory){
     uint16[16] memory nftsQuantities; 
 
-    //ACCESSORIOS
-    nftsQuantities[0]  = accessoriesMap[0];
-    nftsQuantities[1]  = accessoriesMap[1];
-    nftsQuantities[2]  = accessoriesMap[2];
-    nftsQuantities[3]  = accessoriesMap[3];
-    nftsQuantities[4]  = accessoriesMap[4];
-    nftsQuantities[5]  = accessoriesMap[5];
-    nftsQuantities[6]  = accessoriesMap[6];
-    
+    //ACCESSORIES
+    for(uint i = 0; i<7; i++){
+      nftsQuantities[i] = accessoriesMap[i];
+    }
     //HABITATS
-    nftsQuantities[7]  = habitatsMap[0];
-    nftsQuantities[8]  = habitatsMap[1];
-    nftsQuantities[9]  = habitatsMap[2];
-    nftsQuantities[10]  = habitatsMap[3];
-    nftsQuantities[11] = habitatsMap[4];
-
-    //FULLSKIN
-    nftsQuantities[12] = fullskinMap[0];
-    nftsQuantities[13] = fullskinMap[1];
-    nftsQuantities[14] = fullskinMap[2];
-
-    //ANIMAL
+    for(uint i = 0; i<5; i++){
+      nftsQuantities[i+7] = habitatsMap[i];
+    }
+    //FULLSKINS
+    for(uint i = 0; i<3; i++){
+      nftsQuantities[i+12] = fullskinMap[i];
+    }
+    //ANIMALS
     nftsQuantities[15] = animalsCount;
     
     return (nftsQuantities, pricesJager);
